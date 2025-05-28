@@ -1,36 +1,36 @@
 import asyncio
 import aiohttp
-import logging
 from src.api import fetch_all_animals, fetch_animal_detail, post_animals
 from src.transform import transform_animal
 
-# Setup basic logging
-logging.basicConfig(level=logging.INFO, format="%(asctime)s [%(levelname)s] %(message)s")
 
-async def run_etl():
+async def main():
     async with aiohttp.ClientSession() as session:
-        logging.info("Fetching all animal summaries...")
-        summaries = await fetch_all_animals(session)
-        logging.info(f"Fetched {len(summaries)} animal summaries.")
+        print("Fetching all animals summary...")
 
-        logging.info("Fetching animal details...")
-        detail_tasks = [fetch_animal_detail(session, animal['id']) for animal in summaries]
-        details = await asyncio.gather(*detail_tasks)
+        animal_summaries = await fetch_all_animals(session)
+        print(f"Total animals fetched: {len(animal_summaries)}")
 
-        details = [d for d in details if d]
-        logging.info(f"Fetched full details for {len(details)} animals.")
+        print("Fetching animal details...")
+        detail_tasks = [fetch_animal_detail(session, animal["id"]) for animal in animal_summaries]
+        animal_details = await asyncio.gather(*detail_tasks)
 
-        for i in range(0, len(details), 100):
-            batch = details[i:i+100]
-            transformed = [transform_animal(animal) for animal in batch]
-            logging.info(f"Posting batch from index {i} (size {len(transformed)}), sample animal:")
-            logging.info(transformed[0])
+        # Filter out None results (failed fetches)
+        animal_details = [a for a in animal_details if a]
+        print(f"Fetched details for {len(animal_details)} animals.")
 
-            success = await post_animals(session, transformed)
-            if success:
-                logging.info(f"Batch {i}-{i+len(transformed)} posted successfully.")
-            else:
-                logging.error(f"Failed to post batch {i}-{i+len(transformed)}.")
+        batch_size = 100
+        for i in range(0, len(animal_details), batch_size):
+            batch = animal_details[i:i + batch_size]
+            transformed_batch = [transform_animal(animal) for animal in batch]
+
+            print(f"Posting batch starting at index {i}, example transformed animal:")
+            print(transformed_batch[0])
+
+            success = await post_animals(session, transformed_batch)
+            if not success:
+                print(f"Failed to post batch starting at index {i}")
+
 
 if __name__ == "__main__":
-    asyncio.run(run_etl())
+    asyncio.run(main())
