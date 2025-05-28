@@ -12,7 +12,9 @@ async def main():
         print(f"Total animals fetched: {len(animal_summaries)}")
 
         print("Fetching animal details...")
-        detail_tasks = [fetch_animal_detail(session, animal["id"]) for animal in animal_summaries]
+        detail_tasks = [
+            fetch_animal_detail(session, animal["id"]) for animal in animal_summaries
+        ]
         animal_details = await asyncio.gather(*detail_tasks)
 
         # Filter out None results (failed fetches)
@@ -21,7 +23,7 @@ async def main():
 
         batch_size = 100
         for i in range(0, len(animal_details), batch_size):
-            batch = animal_details[i:i + batch_size]
+            batch = animal_details[i : i + batch_size]
             transformed_batch = [transform_animal(animal) for animal in batch]
 
             print(f"Posting batch starting at index {i}, example transformed animal:")
