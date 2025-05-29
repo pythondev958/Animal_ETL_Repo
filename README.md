@@ -91,7 +91,7 @@ Uses batch size of 100 for posting as per API constraints
 The code is modular and testable with unit tests covering the core transformation logic
 
 # Linting
-To run flake8 for code quality checks
+To run flake8 for code quality checks, run the command from the root directory : flake8 .
 
 ## Environment Variables
 Configure environment variables in env.env
